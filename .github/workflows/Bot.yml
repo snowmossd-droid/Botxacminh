@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Extract
-        run: unzip -o bot.zip
+        run: unzip -o *.zip
 
       - name: Commit extracted files
         run: |
