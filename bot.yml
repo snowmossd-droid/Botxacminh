@@ -1,0 +1,44 @@
+name: Discord Bot Runner
+
+on:
+  schedule:
+    - cron: '0 */5 * * *'  # chay lai moi 5 tieng (UTC)
+  workflow_dispatch:  # cho phep bam chay tay de test
+
+# QUAN TRONG: can quyen "contents: write" thi bot moi push duoc config.json nguoc ve repo
+permissions:
+  contents: write
+
+# Tranh 2 job chay chong cheo nhau (vi du bam chay tay trong luc job theo lich dang chay)
+concurrency:
+  group: discord-bot-runner
+  cancel-in-progress: false
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350  # ~5h50p, duoi gioi han 6h cua GitHub Actions
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # can full history de push khong bi loi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - run: npm install
+
+      - name: Run bot
+        env:
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          GUILD_ID: ${{ secrets.GUILD_ID }}
+          UNVERIFIED_ROLE_ID: ${{ secrets.UNVERIFIED_ROLE_ID }}
+          ALERT_CHANNEL_ID: ${{ secrets.ALERT_CHANNEL_ID }}
+          RAID_JOIN_THRESHOLD: '8'
+          RAID_WINDOW_MS: '10000'
+          # GITHUB_TOKEN mac dinh (GITHUB_ACTIONS tu cap) khong du quyen push trong 1 so cau hinh repo,
+          # nen dung 1 Personal Access Token rieng luu trong Secrets, xem README de biet cach tao.
+          GH_PUSH_TOKEN: ${{ secrets.GH_PUSH_TOKEN }}
+        run: node index.js
